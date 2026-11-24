@@ -1,0 +1,5 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  // 本机专属指令: AGENTS.local.md 不入库, 缺失时静默跳过
+  "instructions": ["AGENTS.local.md"]
+}

@@ -1,0 +1,13 @@
+# 本地开发时各种临时的内容, 可以是文件或文件夹
+/local*
+
+# 个人本地指令文件
+/AGENTS.local.md
+
+node_modules/
+dist/
+coverage/
+*.log
+.env
+.env.*
+.DS_Store
