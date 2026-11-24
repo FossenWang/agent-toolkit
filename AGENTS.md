@@ -13,6 +13,7 @@
 ## skill 约定
 - 源码住 `skills/`，按用途分类；`.agents/skills/` 只放安装副本，可整体重建，不入库。
 - 一个 skill 目录只放 `SKILL.md` 和它的运行资产（`scripts/`、`references/`）；来源、改动、许可证等说明放 `docs/skills/<分类>/<name>.md`。
+- `docs/skills/` 下的说明文档用中文；`SKILL.md` 的语言按这个 skill 自己的约定，不随 docs。
 - 写法按 `docs/skills/skill-format.md`，安装与分发按 `docs/skills/npx-skills-cli.md`。
 - 分叉 skill 在 docs 里记录上游仓库、分叉 commit 和许可证；不主动跟随上游更新。
 - SKILL.md 保持单语，语言按适用场景确定。
