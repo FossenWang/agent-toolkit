@@ -11,3 +11,7 @@ coverage/
 .env
 .env.*
 .DS_Store
+
+# skill 安装副本，可由 npx skills 重建
+.agents/skills/
+.claude/skills/
