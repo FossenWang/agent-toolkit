@@ -1,0 +1,14 @@
+{
+  "name": "agent-toolkit",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bun run test:bats && bun run test:plugins",
+    "test:bats": "bash tests/run.sh",
+    "test:plugins": "bun test tests/"
+  },
+  "devDependencies": {
+    "@opencode/plugin": "^2.4.1",
+    "bats": "1.13.0"
+  }
+}

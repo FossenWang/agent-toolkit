@@ -5,7 +5,7 @@
 # suite falls back to serial execution. Pass extra bats arguments before the
 # suite path, for example: tests/run.sh --filter 'diverged'.
 #
-# Set BATS_BIN to use an already-installed bats instead of npx.
+# Bats lookup order: BATS_BIN, then the local devDependency, then npx.
 
 set -euo pipefail
 
@@ -19,9 +19,27 @@ fi
 
 suites=(tests/rebase-merge)
 
-# Keep test fixtures out of the real /tmp root and away from user data.
-export TMPDIR="${TMPDIR:-/tmp/opencode}"
-mkdir -p "$TMPDIR"
+# Fixtures get their own directory: an explicit TMPDIR is used as given, otherwise
+# each run creates a throwaway one under the system temp root.
+created=""
+if [ -z "${TMPDIR:-}" ]; then
+  TMPDIR=$(mktemp -d)
+  export TMPDIR
+  created=1
+else
+  mkdir -p "$TMPDIR" 2>/dev/null || true
+fi
+
+if [ ! -w "$TMPDIR" ]; then
+  printf 'TMPDIR %s is not writable\n' "$TMPDIR" >&2
+  exit 2
+fi
+
+# Clean up a created directory only on success, so a failing run leaves its
+# fixtures behind for inspection.
+if [ -n "$created" ]; then
+  trap 'status=$?; if [ "$status" -eq 0 ]; then rm -rf "$TMPDIR"; else printf "fixtures kept: %s\n" "$TMPDIR" >&2; fi' EXIT
+fi
 
 parallel_bin=""
 if command -v parallel >/dev/null 2>&1; then
@@ -37,12 +55,15 @@ fi
 
 if [ -n "${BATS_BIN:-}" ]; then
   bats=("$BATS_BIN")
+elif [ -x node_modules/.bin/bats ]; then
+  bats=(node_modules/.bin/bats)
 else
-  bats=(npx --yes "bats@$(cat tests/bats-version)")
+  # Keep in step with the "bats" devDependency in package.json.
+  bats=(npx --yes bats@1.13.0)
 fi
 
 if [ "$jobs" -gt 1 ]; then
-  exec "${bats[@]}" --jobs "$jobs" --parallel-binary-name "$parallel_bin" "$@" "${suites[@]}"
+  "${bats[@]}" --jobs "$jobs" --parallel-binary-name "$parallel_bin" "$@" "${suites[@]}"
 else
-  exec "${bats[@]}" "$@" "${suites[@]}"
+  "${bats[@]}" "$@" "${suites[@]}"
 fi

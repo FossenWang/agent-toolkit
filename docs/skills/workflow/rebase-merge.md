@@ -18,17 +18,16 @@
 ## 依赖
 
 - bash、git
-- 测试：bats 1.13.0（`tests/bats-version`，默认经 `npx` 拉起）
+- 测试：bats 1.13.0（仓库根 `package.json` 的 devDependency，`bun install` 后即可用）
 
 ## 测试
 
 ```sh
-bash tests/run.sh
+bun run test:bats    # 只跑本 skill 的 bats 套件
+bun run test         # bats + 插件测试
 ```
 
-- 设置 `BATS_BIN` 可改用已安装的 bats。
-- 设置 `JOBS` 控制并行度；没有 GNU parallel 或 rush 时自动串行。
-- 附加参数透传给 bats，例如 `bash tests/run.sh --filter 'diverged'`。
+- 环境变量（`JOBS`、`BATS_BIN`、`TMPDIR`）、bats 版本与 bun 环境见 [docs/tests.md](../../tests.md)。
 
 ## 目录
 
