@@ -5,7 +5,8 @@
   "scripts": {
     "test": "bun run test:bats && bun run test:plugins",
     "test:bats": "bash tests/run.sh",
-    "test:plugins": "bun test tests/"
+    "test:plugins": "bun test tests/title-local tests/clean-tmp",
+    "test:smoke": "bun test tests/smoke"
   },
   "devDependencies": {
     "@opencode/plugin": "^2.4.1",

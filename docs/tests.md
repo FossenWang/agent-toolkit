@@ -10,6 +10,7 @@
 | `rebase-merge/` | `skills/workflow/rebase-merge` 的 bats 套件 |
 | `title-local/` | `opencode/plugins/title-local` 的 bun 测试 |
 | `clean-tmp/` | `opencode/plugins/clean-tmp` 的 bun 测试 |
+| `smoke/` | 用真实 OpenCode 验证插件能被加载 |
 
 ## 环境准备（bun）
 
@@ -39,6 +40,7 @@ bats 和插件测试都走仓库根的 `package.json`，所以先装 bun：
 bun run test              # bats 套件 + 插件测试
 bun run test:bats         # 只跑 bats
 bun run test:plugins      # 只跑插件测试
+bun run test:smoke        # 用真实 OpenCode 验证插件加载
 ```
 
 单独跑 bats 时可以直接给参数：
@@ -46,6 +48,16 @@ bun run test:plugins      # 只跑插件测试
 ```sh
 bash tests/run.sh --filter 'diverged'
 ```
+
+## 加载冒烟
+
+`tests/smoke/` 不跑 fake ctx，而是用隔离的 `HOME`/XDG 目录和私有端口起一个 OpenCode 服务，确认两个插件真的被加载。它需要 `opencode` 可执行文件，缺失时整条测试跳过，所以不在 `test` 的默认链里。
+
+```sh
+bun run test:smoke
+```
+
+断言三件事：`opencode plugin list` 里两个插件 ID 各出现一次、SOURCE 指向本仓库的源码目录、没有以 `-` 开头的失败行。测试结束会停掉自己起的服务，不碰用户配置。
 
 bats 的查找顺序：`BATS_BIN` → `node_modules/.bin/bats` → `npx bats@1.13.0`。前两个都没有时才走 npx，所以装好依赖就能离线跑。
 
@@ -60,7 +72,7 @@ bats 的查找顺序：`BATS_BIN` → `node_modules/.bin/bats` → `npx bats@1.1
 ## 新增套件
 
 1. 放 `tests/<suite>/`：bats 用例写成 `*.bats`，公共函数放 `helpers.bash`
-2. bats 套件在 `run.sh` 的 `suites` 数组里登记；bun 测试放进去即被 `bun test tests/` 发现
+2. bats 套件在 `run.sh` 的 `suites` 数组里登记；bun 测试放 `tests/<suite>/`，并把目录加进 `package.json` 的 `test:plugins`
 3. 插件测试通过 `bun:test` 编写，直接 import 插件默认导出并捕获 `setup` 注册的回调，不修改插件源码
 
 测试留在仓库根，skill 目录只放运行资产，安装时不会带走测试。
