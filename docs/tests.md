@@ -9,6 +9,7 @@
 | `run.sh` | bats 入口：处理环境变量与并行度 |
 | `rebase-merge/` | `skills/workflow/rebase-merge` 的 bats 套件 |
 | `title-local/` | `opencode/plugins/title-local` 的 bun 测试 |
+| `clean-tmp/` | `opencode/plugins/clean-tmp` 的 bun 测试 |
 
 ## 环境准备（bun）
 
