@@ -1,0 +1,110 @@
+name: Merge branch
+
+# 手动合并：分支必须已 rebase（可快进），可选额外留一个 merge commit。
+# 回灌（main → develop）不走这里，见 docs/git-workflow.md。
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to merge
+        required: true
+        type: string
+      target:
+        description: Merge target
+        required: true
+        type: choice
+        default: develop
+        options:
+          - develop
+          - main
+      need-merge-commit:
+        description: Add an extra merge commit so the merge can be reverted as a unit
+        type: boolean
+        default: false
+
+concurrency:
+  group: merge
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  merge:
+    name: ${{ inputs.branch }} -> ${{ inputs.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BRANCH: ${{ inputs.branch }}
+      TARGET: ${{ inputs.target }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # 祖先判断需要完整历史
+          fetch-depth: 0
+
+      - name: Allow main only from develop or hotfix/*
+        if: inputs.target == 'main' && inputs.branch != 'develop' && !startsWith(inputs.branch, 'hotfix/')
+        run: |
+          echo "::error::main only accepts develop and hotfix/*; merge into develop first"
+          exit 1
+
+      - name: Fetch branch and target
+        run: |
+          set -eu
+          git fetch --no-tags origin \
+            "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH" \
+            "+refs/heads/$TARGET:refs/remotes/origin/$TARGET"
+
+      - name: Require fast-forward
+        run: |
+          git merge-base --is-ancestor "origin/$TARGET" "origin/$BRANCH" || {
+            echo "::error::Not fast-forwardable: $BRANCH does not contain origin/$TARGET. For a release, sync main back into develop first; otherwise rebase locally and force-push the branch."
+            exit 1; }
+
+      - name: Prepare commit to push
+        run: |
+          set -eu
+          if [ "${{ inputs.need-merge-commit }}" = "true" ]; then
+            git checkout -B result "origin/$TARGET"
+            git merge --no-ff --no-edit \
+              -m "Merge branch '$BRANCH' into $TARGET" "origin/$BRANCH"
+          else
+            git checkout -B result "origin/$BRANCH"
+          fi
+
+      # composite action 取自结果的工作区，也就是待合并分支里的代码。
+      # 只有仓库写权限的人能推分支，风险可控；多人协作前需要改成固定版本。
+      - uses: ./.github/actions/setup
+
+      - name: Run unit and bats tests
+        run: bun run test
+
+      - name: Install OpenCode CLI
+        run: bun install -g --trust @opencode/cli
+
+      - name: Add OpenCode to PATH
+        run: echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
+
+      - name: Run plugin load smoke
+        run: bun run test:smoke
+
+      - name: Push
+        run: |
+          set -eu
+          if ! git push origin "HEAD:refs/heads/$TARGET"; then
+            echo "::error::$TARGET moved during this run; trigger again"
+            exit 1
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ "${{ inputs.need-merge-commit }}" = "true" ]; then merged=yes; else merged=no; fi
+          {
+            echo "### $BRANCH -> $TARGET"
+            echo ""
+            echo "- merge commit: $merged"
+            echo "- pushed: $(git rev-parse --short HEAD 2>/dev/null || echo 'not pushed')"
+          } >> "$GITHUB_STEP_SUMMARY"

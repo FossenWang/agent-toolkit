@@ -6,6 +6,7 @@
 ## 仓库索引
 - `skills/`：skill 源码，用子目录分组；文档与维护约定见 `docs/skills/README.md`。
 - `opencode/plugins/`：OpenCode 插件源码，一个插件一个目录；文档与维护约定见 `docs/opencode/plugins/README.md`。
+- `docs/git-workflow.md`：分支模型、Actions 合并流程与发版规则。
 
 ## 语言约定
 - 默认情况下，文档、注释、提交信息用中文。

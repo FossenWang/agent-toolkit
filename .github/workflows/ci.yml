@@ -2,8 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [develop, main]
-  pull_request:
+    branches: [main, develop]
+  # 手动补跑用；合并没有接在这里，merge-branch 自己会跑完整测试
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -13,8 +14,7 @@ permissions:
   contents: read
 
 jobs:
-  # Warms the shared bun download cache once, so the parallel jobs below start
-  # with it instead of racing to download the same packages.
+  # 先预热共享的 bun 下载缓存，下面的并行作业直接复用
   prepare:
     name: prepare
     runs-on: ubuntu-latest
@@ -22,19 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: .bun-version
-
-      - name: Cache bun downloads
-        uses: actions/cache@v6
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-          restore-keys: bun-${{ runner.os }}-
-
-      - name: Warm dependencies
-        run: bun install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
   bats:
     name: bats
@@ -44,22 +32,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: ./.github/actions/setup
         with:
-          bun-version-file: .bun-version
-
-      - name: Cache bun downloads
-        uses: actions/cache@v6
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-          restore-keys: bun-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Install GNU parallel
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq parallel
+          parallel: "true"
 
       - name: Run bats suites
         run: bun run test:bats
@@ -72,22 +47,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: .bun-version
+      - uses: ./.github/actions/setup
 
-      - name: Cache bun downloads
-        uses: actions/cache@v6
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-          restore-keys: bun-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      # Discovers every tests/<suite>/ except smoke, so a new plugin needs no
-      # workflow change.
+      # 自动发现 tests/ 下除 smoke 外的所有套件，新增插件不用改 workflow
       - name: Run plugin tests
         run: bun run test:plugins
 
@@ -99,26 +61,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: .bun-version
+      - uses: ./.github/actions/setup
 
-      - name: Cache bun downloads
-        uses: actions/cache@v6
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-          restore-keys: bun-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      # 不锁版本：冒烟始终针对 npm 上的最新版 CLI。缓存这 500 MB
-      # 二进制的恢复耗时反而比现装更久，所以不缓存。
+      # 不锁版本：冒烟始终针对 npm 上的最新版 CLI
       - name: Install OpenCode CLI
         run: bun install -g --trust @opencode/cli
 
-      - name: Put OpenCode on PATH
+      - name: Add OpenCode to PATH
         run: echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
 
       - name: Verify plugin loading

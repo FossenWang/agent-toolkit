@@ -1,0 +1,37 @@
+name: Setup
+description: Install bun, restore the dependency cache, and install dependencies
+
+inputs:
+  bun-version-file:
+    description: File that contains the bun version
+    default: .bun-version
+  install:
+    description: Run bun install --frozen-lockfile
+    default: "true"
+  parallel:
+    description: Install GNU parallel for parallel bats runs
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - uses: oven-sh/setup-bun@v2
+      with:
+        bun-version-file: ${{ inputs.bun-version-file }}
+
+    - name: Restore bun download cache
+      uses: actions/cache@v6
+      with:
+        path: ~/.bun/install/cache
+        key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+        restore-keys: bun-${{ runner.os }}-
+
+    - name: Install dependencies
+      if: inputs.install == 'true'
+      shell: bash
+      run: bun install --frozen-lockfile
+
+    - name: Install GNU parallel
+      if: inputs.parallel == 'true'
+      shell: bash
+      run: sudo apt-get update -qq && sudo apt-get install -y -qq parallel
