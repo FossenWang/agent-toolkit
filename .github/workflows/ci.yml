@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Warms the shared bun download cache once, so the parallel jobs below start
+  # with it instead of racing to download the same packages.
+  prepare:
+    name: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - name: Cache bun downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - name: Warm dependencies
+        run: bun install --frozen-lockfile
+
+  bats:
+    name: bats
+    runs-on: ubuntu-latest
+    needs: prepare
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - name: Cache bun downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install GNU parallel
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq parallel
+
+      - name: Run bats suites
+        run: bun run test:bats
+
+  bun:
+    name: bun tests
+    runs-on: ubuntu-latest
+    needs: prepare
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - name: Cache bun downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # Discovers every tests/<suite>/ except smoke, so a new plugin needs no
+      # workflow change.
+      - name: Run plugin tests
+        run: bun run test:plugins
+
+  smoke:
+    name: plugin load
+    runs-on: ubuntu-latest
+    needs: prepare
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - name: Cache bun downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # Resolve the current npm version so the cache key follows upstream: a new
+      # release misses the old cache and installs the latest CLI.
+      - name: Resolve OpenCode CLI version
+        id: cli-version
+        run: echo "version=$(bun info @opencode/cli version)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache OpenCode CLI
+        id: cli
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/global
+            ~/.bun/bin
+          # 带上 bun 版本：缓存里也含 ~/.bun/bin，bun 升级后不能把旧二进制盖回来
+          key: opencode-cli-${{ runner.os }}-bun-${{ hashFiles('.bun-version') }}-${{ steps.cli-version.outputs.version }}
+
+      - name: Install OpenCode CLI
+        if: steps.cli.outputs.cache-hit != 'true'
+        run: bun install -g --trust @opencode/cli@${{ steps.cli-version.outputs.version }}
+
+      - name: Put OpenCode on PATH
+        run: echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
+
+      - name: Verify plugin loading
+        run: bun run test:smoke

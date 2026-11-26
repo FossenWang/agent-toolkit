@@ -5,7 +5,7 @@
   "scripts": {
     "test": "bun run test:bats && bun run test:plugins",
     "test:bats": "bash tests/run.sh",
-    "test:plugins": "bun test tests/title-local tests/clean-tmp",
+    "test:plugins": "bun test tests --path-ignore-patterns 'tests/smoke/**'",
     "test:smoke": "bun test tests/smoke"
   },
   "devDependencies": {

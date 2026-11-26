@@ -14,7 +14,7 @@
 
 ## 环境准备（bun）
 
-bats 和插件测试都走仓库根的 `package.json`，所以先装 bun：
+bats 和插件测试都走仓库根的 `package.json`，所以先装 bun。版本记在 `.bun-version`，CI 通过 `setup-bun` 的 `bun-version-file` 读它，本地照这个版本装即可：
 
 - 官方脚本装到 `~/.bun`（`BUN_INSTALL`）：二进制约 100 MB，另带包缓存
 - **不往 PATH 里加 `~/.bun/bin`**。把 `bun`、`bunx` 软链到已经在 PATH 上的 `~/.local/bin`：
