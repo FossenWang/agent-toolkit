@@ -20,14 +20,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: .bun-version
 
       - name: Cache bun downloads
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
@@ -42,14 +42,14 @@ jobs:
     needs: prepare
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: .bun-version
 
       - name: Cache bun downloads
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
@@ -70,14 +70,14 @@ jobs:
     needs: prepare
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: .bun-version
 
       - name: Cache bun downloads
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
@@ -97,14 +97,14 @@ jobs:
     needs: prepare
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: .bun-version
 
       - name: Cache bun downloads
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
@@ -113,25 +113,10 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      # Resolve the current npm version so the cache key follows upstream: a new
-      # release misses the old cache and installs the latest CLI.
-      - name: Resolve OpenCode CLI version
-        id: cli-version
-        run: echo "version=$(bun info @opencode/cli version)" >> "$GITHUB_OUTPUT"
-
-      - name: Cache OpenCode CLI
-        id: cli
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.bun/install/global
-            ~/.bun/bin
-          # 带上 bun 版本：缓存里也含 ~/.bun/bin，bun 升级后不能把旧二进制盖回来
-          key: opencode-cli-${{ runner.os }}-bun-${{ hashFiles('.bun-version') }}-${{ steps.cli-version.outputs.version }}
-
+      # 不锁版本：冒烟始终针对 npm 上的最新版 CLI。缓存这 500 MB
+      # 二进制的恢复耗时反而比现装更久，所以不缓存。
       - name: Install OpenCode CLI
-        if: steps.cli.outputs.cache-hit != 'true'
-        run: bun install -g --trust @opencode/cli@${{ steps.cli-version.outputs.version }}
+        run: bun install -g --trust @opencode/cli
 
       - name: Put OpenCode on PATH
         run: echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
