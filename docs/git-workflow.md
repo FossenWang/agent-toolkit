@@ -13,7 +13,10 @@
 | `main` | 稳定线，默认分支 | `develop` / `hotfix/*` | — | 永不 |
 | `develop` | 日常不稳定版 | `main`（热修同步） | `main`（发版） | 永不 |
 | `feature/*` | 功能开发 | `develop` | `develop` | 可以 |
+| `agent/*` | agent使用的日常开发分支 | `develop` | `develop` | 可以 |
 | `hotfix/*` | 线上修复 | `main` 或 `develop` | `main` / `develop` | 可以 |
+
+`agent/*` 是 agent 日常开发工作的分支，一些不成完整功能的小改动不必开专门的 feature 分支，直接在此分支开发，让 agent 自主提交和推送，不要在 `main` 和 `develop` 分支开发。
 
 ## 不变量
 
