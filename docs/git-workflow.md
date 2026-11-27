@@ -38,7 +38,7 @@ gh workflow run merge-branch.yml --ref main \
 | `target` | `develop` 或 `main` |
 | `need-merge-commit` | 额外留一个合并提交，用于整段回退，默认不勾 |
 
-合入成功后会再触发一次 `ci.yml`，跑在目标分支的新提交上。`GITHUB_TOKEN` 的 push 不会触发其他 workflow，少了这一步，分支的 CI 记录和徽章会停在旧提交。
+合入 `main` 成功后会再触发一次 `ci.yml`，跑在新提交上。`GITHUB_TOKEN` 的 push 不会触发其他 workflow，少了这一步，`main` 的 CI 记录和徽章会停在旧提交。合入 `develop` 不补跑：门禁测试已经在待推送的提交上跑过，再跑一遍只是重复。
 
 - 不勾 `need-merge-commit`：直接把分支推到目标；目标是分支的祖先，所以是快进。
 - 勾选：以目标为基点先生成合并提交，再测试、再推送；前提仍是可快进，不放松 rebase 要求。

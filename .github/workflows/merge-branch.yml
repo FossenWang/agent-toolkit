@@ -100,9 +100,11 @@ jobs:
             exit 1
           fi
 
-      # GITHUB_TOKEN 的 push 不会触发其他 workflow；不补这一步，目标分支的
-      # CI 记录和徽章会停在旧提交。workflow_dispatch 不受这个限制。
-      - name: Trigger CI on target branch
+      # GITHUB_TOKEN 的 push 不会触发其他 workflow；main 不补这一步，CI 记录和
+      # 徽章会停在旧提交。workflow_dispatch 不受这个限制。合入 develop 不补跑，
+      # 门禁测试已经覆盖。
+      - name: Trigger CI on main
+        if: inputs.target == 'main'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh workflow run ci.yml --ref "$TARGET" || echo "::warning::CI dispatch failed; trigger it manually"
