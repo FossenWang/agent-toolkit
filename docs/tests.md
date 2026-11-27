@@ -10,6 +10,7 @@
 | `rebase-merge/` | `skills/workflow/rebase-merge` 的 bats 套件 |
 | `title-local/` | `opencode/plugins/title-local` 的 bun 测试 |
 | `clean-tmp/` | `opencode/plugins/clean-tmp` 的 bun 测试 |
+| `warming/` | `opencode/plugins/warming` 的 bun 测试 |
 | `smoke/` | 用真实 OpenCode 验证插件能被加载 |
 
 ## 环境准备（bun）
@@ -51,13 +52,13 @@ bash tests/run.sh --filter 'diverged'
 
 ## 加载冒烟
 
-`tests/smoke/` 不跑 fake ctx，而是用隔离的 `HOME`/XDG 目录和私有端口起一个 OpenCode 服务，确认两个插件真的被加载。它需要 `opencode` 可执行文件，缺失时整条测试跳过，所以不在 `test` 的默认链里。
+`tests/smoke/` 不跑 fake ctx，而是用隔离的 `HOME`/XDG 目录和私有端口起一个 OpenCode 服务，确认三个插件真的被加载。它需要 `opencode` 可执行文件，缺失时整条测试跳过，所以不在 `test` 的默认链里。
 
 ```sh
 bun run test:smoke
 ```
 
-断言三件事：`opencode plugin list` 里两个插件 ID 各出现一次、SOURCE 指向本仓库的源码目录、没有以 `-` 开头的失败行。测试结束会停掉自己起的服务，不碰用户配置。
+断言三件事：`opencode plugin list` 里三个插件 ID 各出现一次、SOURCE 指向本仓库的源码目录、没有以 `-` 开头的失败行。测试结束会停掉自己起的服务，不碰用户配置。
 
 bats 的查找顺序：`BATS_BIN` → `node_modules/.bin/bats` → `npx bats@1.13.0`。前两个都没有时才走 npx，所以装好依赖就能离线跑。
 

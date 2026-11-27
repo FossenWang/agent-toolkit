@@ -46,6 +46,7 @@ npx skills add ./skills \
 | --- | --- |
 | `clean-tmp` | 清扫 OpenCode 自己的临时目录，供容器环境使用 |
 | `title-local` | 用首条消息本地生成会话标题，不调用模型、不联网，零花费 |
+| `warming` | 按会话保温 prompt cache，默认关闭，只对显式开启的会话发 ping |
 
 插件通过 `opencode.jsonc` 的 `plugins` 显式引用，不依赖自动发现。
 

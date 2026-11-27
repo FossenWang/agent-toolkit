@@ -4,9 +4,9 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 
 // 加载冒烟：用隔离的 HOME/XDG 和私有端口起一个 OpenCode 服务，
-// 确认两个插件都被真实加载，而不是只在 fake ctx 里跑通。
+// 确认插件都被真实加载，而不是只在 fake ctx 里跑通。
 const repo = join(import.meta.dir, "..", "..")
-const plugins = ["clean-tmp", "title-local"].map((name) => ({
+const plugins = ["clean-tmp", "title-local", "warming"].map((name) => ({
   name,
   dir: join(repo, "opencode", "plugins", name),
 }))
@@ -39,7 +39,7 @@ afterAll(async () => {
 })
 
 test.skipIf(!opencode)(
-  "两个插件都能被 OpenCode 加载",
+  "三个插件都能被 OpenCode 加载",
   async () => {
     const configDir = join(home, ".config", "opencode")
     await mkdir(configDir, { recursive: true })

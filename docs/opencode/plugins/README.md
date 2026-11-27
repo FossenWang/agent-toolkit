@@ -6,6 +6,7 @@
 | --- | --- | --- |
 | `clean-tmp` | 清扫 OpenCode 自己的临时目录 | [clean-tmp.md](clean-tmp.md) |
 | `title-local` | 用首条消息本地生成会话标题，不调用模型 | [title-local.md](title-local.md) |
+| `warming` | 按会话保温 prompt cache，默认关闭 | [warming.md](warming.md) |
 
 ## 维护约定
 
