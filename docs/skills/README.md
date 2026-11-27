@@ -8,7 +8,7 @@
 | `agents-draft` | 把已加载的指令文件放进草稿箱，确认后一次性写入 | 自建 | [agent/agents-draft.md](agent/agents-draft.md) |
 | `git-commit` | 按 Conventional Commits 生成提交信息 | 分叉 · awesome-copilot | [workflow/git-commit.md](workflow/git-commit.md) |
 | `rebase-merge` | 功能分支 rebase 到主分支后快进合入 | 自建 | [workflow/rebase-merge.md](workflow/rebase-merge.md) |
-| `grilling` | 反复追问，压测方案与决策 | 分叉 · mattpocock/skills | [mattpocock.md](mattpocock.md) |
+| `grilling` | 反复追问，压测方案与决策；常配合 mattpocock 其他 skill 使用 | 分叉 · mattpocock/skills | [mattpocock.md](mattpocock.md) |
 
 ## 维护约定
 
