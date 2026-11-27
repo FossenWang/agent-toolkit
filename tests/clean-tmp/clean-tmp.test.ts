@@ -9,11 +9,24 @@ import {
   oldFile,
   prepareRoot,
   resetTmp,
+  restoreRoot,
+  restoreRootSync,
   waitFor,
 } from "./helpers.ts"
 
 // TMP 在模块加载时确定，所以先定测试目录再 import 插件
 const { root, tmp } = await prepareRoot()
+// 中断时也要把进程级 TMPDIR 还回去
+const restoreOnExit = () => restoreRootSync(root)
+process.once("exit", restoreOnExit)
+process.once("SIGINT", () => {
+  restoreOnExit()
+  process.exit(130)
+})
+process.once("SIGTERM", () => {
+  restoreOnExit()
+  process.exit(143)
+})
 const { default: plugin } = await import("../../opencode/plugins/clean-tmp/index.ts")
 
 type Ctx = Parameters<typeof plugin.setup>[0]
@@ -52,7 +65,8 @@ beforeEach(async () => {
 })
 
 afterAll(async () => {
-  await rm(root, { recursive: true, force: true })
+  process.off("exit", restoreOnExit)
+  await restoreRoot(root)
 })
 
 describe("clean-tmp", () => {

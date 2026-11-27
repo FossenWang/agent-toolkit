@@ -1,14 +1,34 @@
+import { rmSync } from "node:fs"
 import { mkdir, mkdtemp, rm, stat, utimes, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
 export const DAY = 24 * 60 * 60 * 1000
 
+// TMPDIR 是进程级变量，测试结束后必须还回去，否则同进程里后面的测试都会指到已删除目录
+const originalTmpDir = process.env.TMPDIR
+
+const restoreEnv = () => {
+  if (originalTmpDir === undefined) delete process.env.TMPDIR
+  else process.env.TMPDIR = originalTmpDir
+}
+
 /** 插件在模块加载时算 TMP，所以测试目录要在 import 插件之前定下来 */
 export const prepareRoot = async () => {
   const root = await mkdtemp(join(tmpdir(), "clean-tmp-test-"))
   process.env.TMPDIR = root
   return { root, tmp: join(root, "opencode") }
+}
+
+/** 正常结束时恢复；中断时用同步版本，避免退出前目录已被删 */
+export const restoreRoot = async (root: string) => {
+  await rm(root, { recursive: true, force: true })
+  restoreEnv()
+}
+
+export const restoreRootSync = (root: string) => {
+  rmSync(root, { recursive: true, force: true })
+  restoreEnv()
 }
 
 export const resetTmp = async (tmp: string) => {
