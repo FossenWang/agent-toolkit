@@ -29,6 +29,8 @@ concurrency:
 
 permissions:
   contents: write
+  # 合入后主动 dispatch 一次 CI
+  actions: write
 
 jobs:
   merge:
@@ -97,6 +99,13 @@ jobs:
             echo "::error::$TARGET moved during this run; trigger again"
             exit 1
           fi
+
+      # GITHUB_TOKEN 的 push 不会触发其他 workflow；不补这一步，目标分支的
+      # CI 记录和徽章会停在旧提交。workflow_dispatch 不受这个限制。
+      - name: Trigger CI on target branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run ci.yml --ref "$TARGET" || echo "::warning::CI dispatch failed; trigger it manually"
 
       - name: Summary
         if: always()
