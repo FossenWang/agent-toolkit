@@ -33,6 +33,7 @@ bats 和插件测试都走仓库根的 `package.json`，所以先装 bun。版�
 
 - bats 1.13.0 是仓库根的 devDependency，`bun install` 之后由 `node_modules/.bin/bats` 提供
 - 插件测试依赖 `@opencode/plugin`，同样在仓库根
+- 类型检查依赖 `@types/bun`、`@tsconfig/bun`、`typescript`，配置见根目录 `tsconfig.json`
 
 ## 运行
 
@@ -41,6 +42,15 @@ bun run test              # bats 套件 + 插件测试
 bun run test:bats         # 只跑 bats
 bun run test:plugins      # 只跑插件测试
 bun run test:smoke        # 用真实 OpenCode 验证插件加载
+```
+
+## 类型检查
+
+`tsconfig.json` 继承 `@tsconfig/bun`，只检查 `opencode/plugins/` 与 `tests/` 下的 TypeScript。沿用 OpenCode 官方的分工：本地用 Bun 自带检查器快检，CI 用 `tsc` 当准绳。
+
+```sh
+bun run typecheck         # 本地快检（bun check）
+bun run typecheck:tsc     # tsc --noEmit，CI 跑这条
 ```
 
 单独跑 bats 时可以直接给参数：

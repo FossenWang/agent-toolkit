@@ -53,6 +53,20 @@ jobs:
       - name: Run plugin tests
         run: bun run test:plugins
 
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    needs: prepare
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+
+      # 本地用 `bun run typecheck` 快检；CI 用 tsc 作为准绳，与 OpenCode 官方一致
+      - name: Typecheck
+        run: bun run typecheck:tsc
+
   smoke:
     name: plugin load
     runs-on: ubuntu-latest

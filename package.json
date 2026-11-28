@@ -6,10 +6,15 @@
     "test": "bun run test:bats && bun run test:plugins",
     "test:bats": "bash tests/run.sh",
     "test:plugins": "bun test tests --path-ignore-patterns 'tests/smoke/**'",
-    "test:smoke": "bun test tests/smoke"
+    "test:smoke": "bun test tests/smoke",
+    "typecheck": "bun check --no-script",
+    "typecheck:tsc": "tsc --noEmit"
   },
   "devDependencies": {
     "@opencode/plugin": "^2.4.1",
-    "bats": "1.13.0"
+    "@tsconfig/bun": "^1.0.12",
+    "@types/bun": "^1.4.5",
+    "bats": "1.13.0",
+    "typescript": "^7.0.2"
   }
 }

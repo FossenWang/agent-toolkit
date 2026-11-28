@@ -48,7 +48,9 @@ export const createFake = async (options: FakeOptions = {}): Promise<Fake> => {
       if (captured.length !== 1) {
         throw new Error(`expected exactly one hook, got ${captured.length}`)
       }
-      await captured[0](event)
+      const hook = captured[0]
+      if (!hook) throw new Error("hook is missing")
+      await hook(event)
     },
   }
 }
